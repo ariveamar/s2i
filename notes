@@ -1,0 +1,29 @@
+curl https://mirror.openshift.com/pub/openshift-v4/clients/butane/latest/butane --output butane
+chmod +x butane
+
+
+variant: openshift
+version: 4.10.0
+metadata:
+  name: 99-worker-custom
+  labels:
+    machineconfiguration.openshift.io/role: worker
+openshift:
+  kernel_arguments:
+    - loglevel=7
+storage:
+  files:
+    - path: /etc/chrony.conf
+      mode: 0644
+      overwrite: true
+      contents:
+        inline: |
+          pool 0.rhel.pool.ntp.org iburst
+          driftfile /var/lib/chrony/drift
+          makestep 1.0 3
+          rtcsync
+          logdir /var/log/chrony
+
+
+butane 99-worker-custom.bu -o ./99-worker-custom.yaml
+oc create -f 99-worker-custom.yaml
